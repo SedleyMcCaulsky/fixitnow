@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    // Lazy load dependencies to avoid build-time evaluation
+    const { default: Stripe } = await import('stripe')
+    const { createClient } = await import('@supabase/supabase-js')
+
     // Validate environment variables at runtime
     const stripeSecret = process.env.STRIPE_SECRET_KEY
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
@@ -20,6 +25,7 @@ export async function POST(request: NextRequest) {
       apiVersion: '2026-04-22.dahlia' as any,
     })
 
+    // Use direct Supabase client for admin operations (not server client)
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Get raw body for signature verification
